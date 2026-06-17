@@ -36,7 +36,7 @@ export default function App() {
   return (
     <div className="min-h-screen">
       <header className="sticky top-0 z-10 border-b border-slate-200 bg-white/90 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
+        <div className="flex w-full items-center justify-between px-6 py-3">
           <div>
             <h1 className="text-base font-bold text-slate-900">
               Generative Image — White Paper Builder
@@ -71,14 +71,14 @@ export default function App() {
         </div>
       </header>
 
-      <main className="mx-auto grid max-w-6xl gap-6 px-6 py-6 md:grid-cols-2">
+      <main className="grid w-full gap-6 px-6 py-6 md:grid-cols-[minmax(360px,440px)_1fr]">
         <section className={`${tab === 'edit' ? 'block' : 'hidden'} md:block`}>
           <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
             <SubmissionForm submission={submission} onChange={patch} />
           </div>
         </section>
 
-        <section className={`${tab === 'preview' ? 'block' : 'hidden'} md:block`}>
+        <section className={`${tab === 'preview' ? 'block' : 'hidden'} min-w-0 md:block`}>
           <div className="sticky top-20">
             <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-400">
               Live preview

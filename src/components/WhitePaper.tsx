@@ -64,6 +64,24 @@ export default function WhitePaper({ submission }: Props) {
                     className="mx-auto max-h-[460px] rounded-md ring-1 ring-slate-200"
                   />
                 )}
+                {e.contextImages.length > 0 && (
+                  <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
+                    <span className="text-[11px] uppercase tracking-wide text-slate-400">
+                      Context inputs:
+                    </span>
+                    {e.contextImages.map(
+                      (c) =>
+                        c.imageUrl && (
+                          <img
+                            key={c.id}
+                            src={c.imageUrl}
+                            alt="context input"
+                            className="h-14 w-14 rounded object-cover ring-1 ring-slate-200"
+                          />
+                        ),
+                    )}
+                  </div>
+                )}
                 <figcaption className="mt-3 text-left text-sm text-slate-600">
                   <span className="font-semibold text-slate-700">Figure {i + 1}.</span>{' '}
                   {e.prompt && (

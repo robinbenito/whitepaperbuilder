@@ -1,5 +1,11 @@
 export type EntrySource = 'manual' | 'gemini' | 'chatgpt';
 
+export interface ContextImage {
+  id: string;
+  imageUrl: string;
+  fileName: string;
+}
+
 export interface ImageEntry {
   id: string;
   imageUrl: string; // data URL (base64) so it survives PDF embedding
@@ -7,6 +13,8 @@ export interface ImageEntry {
   prompt: string;
   geminiLink: string;
   chatgptLink: string;
+  /** Optional reference images that were fed into the model as prompt context. */
+  contextImages: ContextImage[];
   /** Which import group produced this entry (so a whole group can be removed). */
   groupId?: string;
 }
@@ -38,6 +46,7 @@ export function emptyEntry(groupId?: string): ImageEntry {
     prompt: '',
     geminiLink: '',
     chatgptLink: '',
+    contextImages: [],
     groupId,
   };
 }

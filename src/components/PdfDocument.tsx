@@ -57,6 +57,9 @@ const s = StyleSheet.create({
   },
   figure: { marginBottom: 20 },
   figImage: { maxHeight: 320, objectFit: 'contain', marginBottom: 6 },
+  contextRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 6 },
+  contextLabel: { fontSize: 8, color: '#94a3b8', textTransform: 'uppercase' },
+  contextImg: { width: 44, height: 44, objectFit: 'cover', borderRadius: 3 },
   figCaption: { fontSize: 10, color: '#475569' },
   figLabel: { fontFamily: 'Times-Bold' },
   promptMark: {
@@ -176,9 +179,20 @@ export default function PdfDocument({ submission }: { submission: Submission }) 
           <View>
             <Text style={s.sectionHead}>Image Documentation</Text>
             {figured.map((e, i) => (
-              <View key={e.id} style={s.figure} wrap={false}>
+              <View key={e.id} style={s.figure}>
                 {/* eslint-disable-next-line jsx-a11y/alt-text */}
                 {e.imageUrl ? <Image src={e.imageUrl} style={s.figImage} /> : null}
+                {e.contextImages.length > 0 && (
+                  <View style={s.contextRow}>
+                    <Text style={s.contextLabel}>Context inputs:</Text>
+                    {e.contextImages.map((c) =>
+                      c.imageUrl ? (
+                        // eslint-disable-next-line jsx-a11y/alt-text
+                        <Image key={c.id} src={c.imageUrl} style={s.contextImg} />
+                      ) : null,
+                    )}
+                  </View>
+                )}
                 <Text style={s.figCaption}>
                   <Text style={s.figLabel}>Figure {i + 1}. </Text>
                   {e.prompt ? (

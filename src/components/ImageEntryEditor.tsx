@@ -1,5 +1,6 @@
-import type { ImageEntry } from '../types';
+import type { ImageEntry, ContextImage } from '../types';
 import HighlightedPrompt from './HighlightedPrompt';
+import ImageDropzone from './ImageDropzone';
 
 interface Props {
   entry: ImageEntry;
@@ -13,15 +14,6 @@ interface Props {
   onHandleMouseUp: () => void;
 }
 
-function readFileAsDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
-
 export default function ImageEntryEditor({
   entry,
   index,
@@ -33,11 +25,12 @@ export default function ImageEntryEditor({
   onHandleMouseDown,
   onHandleMouseUp,
 }: Props) {
-  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const dataUrl = await readFileAsDataUrl(file);
-    onChange({ imageUrl: dataUrl, fileName: file.name });
+  function addContextImage(imageUrl: string, fileName: string) {
+    const img: ContextImage = { id: crypto.randomUUID(), imageUrl, fileName };
+    onChange({ contextImages: [...entry.contextImages, img] });
+  }
+  function removeContextImage(id: string) {
+    onChange({ contextImages: entry.contextImages.filter((c) => c.id !== id) });
   }
 
   const hasHighlight = /==[^=]+==/.test(entry.prompt) || (previousPrompt?.trim().length ?? 0) > 0;
@@ -76,23 +69,14 @@ export default function ImageEntryEditor({
 
       <div className="grid gap-4 md:grid-cols-[160px_1fr]">
         <div>
-          <label className="block cursor-pointer">
-            {entry.imageUrl ? (
-              <img
-                src={entry.imageUrl}
-                alt={`Figure ${index + 1}`}
-                className="aspect-square w-full rounded-md object-cover ring-1 ring-slate-300"
-              />
-            ) : (
-              <div className="flex aspect-square w-full items-center justify-center rounded-md border-2 border-dashed border-slate-300 text-center text-xs text-slate-400">
-                Click to upload image
-              </div>
-            )}
-            <input type="file" accept="image/*" onChange={handleFile} className="hidden" />
-          </label>
-          {entry.fileName && (
-            <p className="mt-1 truncate text-[11px] text-slate-400">{entry.fileName}</p>
-          )}
+          <ImageDropzone
+            imageUrl={entry.imageUrl}
+            fileName={entry.fileName}
+            onImage={(url, name) => onChange({ imageUrl: url, fileName: name })}
+            onClear={() => onChange({ imageUrl: '', fileName: '' })}
+            placeholder="Result image — click, drop, or paste"
+            alt={`Figure ${index + 1}`}
+          />
         </div>
 
         <div className="space-y-3">
@@ -119,6 +103,7 @@ export default function ImageEntryEditor({
               </div>
             )}
           </div>
+
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
               <label className="mb-1 block text-xs font-medium text-slate-600">
@@ -143,6 +128,41 @@ export default function ImageEntryEditor({
                 placeholder="https://chatgpt.com/…"
                 className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-xs focus:border-emerald-400 focus:outline-none focus:ring-1 focus:ring-emerald-400"
               />
+            </div>
+          </div>
+
+          {/* Optional context / input images fed to the model */}
+          <div>
+            <label className="mb-1 block text-xs font-medium text-slate-600">
+              Context images{' '}
+              <span className="font-normal text-slate-400">(optional — inputs to the prompt)</span>
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {entry.contextImages.map((c) => (
+                <div key={c.id} className="w-16">
+                  <ImageDropzone
+                    imageUrl={c.imageUrl}
+                    onImage={(url) =>
+                      onChange({
+                        contextImages: entry.contextImages.map((ci) =>
+                          ci.id === c.id ? { ...ci, imageUrl: url } : ci,
+                        ),
+                      })
+                    }
+                    onClear={() => removeContextImage(c.id)}
+                    className="h-16 w-16"
+                    alt="Context image"
+                  />
+                </div>
+              ))}
+              <div className="w-16">
+                <ImageDropzone
+                  onImage={addContextImage}
+                  placeholder="+ add"
+                  className="h-16 w-16"
+                  alt="Add context image"
+                />
+              </div>
             </div>
           </div>
         </div>
