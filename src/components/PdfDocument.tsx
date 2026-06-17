@@ -61,13 +61,22 @@ const s = StyleSheet.create({
     maxHeight: 300,
     objectFit: 'contain',
     alignSelf: 'center',
+    marginBottom: 4,
+  },
+  figNumber: {
+    fontSize: 10,
+    fontFamily: 'Times-Bold',
+    textAlign: 'center',
+    color: '#334155',
     marginBottom: 6,
   },
-  contextRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 6 },
-  contextLabel: { fontSize: 8, color: '#94a3b8', textTransform: 'uppercase' },
+  figBody: { flexDirection: 'row', gap: 14 },
+  figCol: { flex: 1 },
+  contextCol: { width: 120 },
+  contextLabel: { fontSize: 8, color: '#94a3b8', textTransform: 'uppercase', marginBottom: 3 },
+  contextImgs: { flexDirection: 'row', flexWrap: 'wrap', gap: 4 },
   contextImg: { width: 44, height: 44, objectFit: 'cover', borderRadius: 3 },
   figCaption: { fontSize: 10, color: '#475569' },
-  figLabel: { fontFamily: 'Times-Bold' },
   promptMark: {
     backgroundColor: '#fef08a',
     color: '#713f12',
@@ -161,48 +170,61 @@ export default function PdfDocument({ submission }: { submission: Submission }) 
     return refs;
   });
 
-  const renderFigure = (e: (typeof figured)[number], i: number) => (
-    <View key={e.id} style={s.figure}>
-      {/* eslint-disable-next-line jsx-a11y/alt-text */}
-      {e.imageUrl ? <Image src={e.imageUrl} style={s.figImage} /> : null}
-      {e.contextImages.length > 0 && (
-        <View style={s.contextRow}>
-          <Text style={s.contextLabel}>Context inputs:</Text>
-          {e.contextImages.map((c) =>
-            c.imageUrl ? (
-              // eslint-disable-next-line jsx-a11y/alt-text
-              <Image key={c.id} src={c.imageUrl} style={s.contextImg} />
-            ) : null,
+  const renderFigure = (e: (typeof figured)[number], i: number) => {
+    const hasContext = e.contextImages.some((c) => c.imageUrl);
+    return (
+      <View key={e.id} style={s.figure}>
+        {/* eslint-disable-next-line jsx-a11y/alt-text */}
+        {e.imageUrl ? <Image src={e.imageUrl} style={s.figImage} /> : null}
+        {/* Figure number captions the main image */}
+        <Text style={s.figNumber}>Figure {i + 1}.</Text>
+
+        {/* Two columns: prompt + links | context imagery. One column if no context. */}
+        <View style={hasContext ? s.figBody : undefined}>
+          <View style={hasContext ? s.figCol : undefined}>
+            {e.prompt ? (
+              <Text style={s.figCaption}>
+                Prompt:{' '}
+                {highlightPrompt(e.prompt).map((seg, k) => (
+                  <Text key={k} style={seg.highlight ? s.promptMark : undefined}>
+                    {seg.text}
+                  </Text>
+                ))}
+              </Text>
+            ) : null}
+            {(e.geminiLink || e.chatgptLink) && (
+              <View style={s.badges}>
+                {e.geminiLink ? (
+                  <Link src={e.geminiLink} style={s.geminiBadge}>
+                    ◆ View in Gemini ↗
+                  </Link>
+                ) : null}
+                {e.chatgptLink ? (
+                  <Link src={e.chatgptLink} style={s.chatgptBadge}>
+                    ✦ View in ChatGPT ↗
+                  </Link>
+                ) : null}
+              </View>
+            )}
+          </View>
+
+          {hasContext && (
+            <View style={s.contextCol}>
+              <Text style={s.contextLabel}>Context inputs</Text>
+              <View style={s.contextImgs}>
+                {e.contextImages.map((c) =>
+                  c.imageUrl ? (
+                    // eslint-disable-next-line jsx-a11y/alt-text
+                    <Image key={c.id} src={c.imageUrl} style={s.contextImg} />
+                  ) : null,
+                )}
+              </View>
+            </View>
           )}
         </View>
-      )}
-      <Text style={s.figCaption}>
-        <Text style={s.figLabel}>Figure {i + 1}. </Text>
-        {e.prompt ? (
-          <>
-            Prompt:{' '}
-            {highlightPrompt(e.prompt, i > 0 ? figured[i - 1].prompt : undefined).map((seg, k) => (
-              <Text key={k} style={seg.highlight ? s.promptMark : undefined}>
-                {seg.text}
-              </Text>
-            ))}
-          </>
-        ) : null}
-      </Text>
-      <View style={s.badges}>
-        {e.geminiLink ? (
-          <Link src={e.geminiLink} style={s.geminiBadge}>
-            ◆ View in Gemini ↗
-          </Link>
-        ) : null}
-        {e.chatgptLink ? (
-          <Link src={e.chatgptLink} style={s.chatgptBadge}>
-            ✦ View in ChatGPT ↗
-          </Link>
-        ) : null}
       </View>
-    </View>
-  );
+    );
+  };
 
   return (
     <Document title={title} author={studentName}>

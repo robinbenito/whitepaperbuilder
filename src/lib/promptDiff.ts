@@ -69,12 +69,28 @@ function parseManual(s: string): Segment[] {
 
 /**
  * Produce highlight segments for a prompt.
- * - If the prompt contains manual ==marks==, those win.
- * - Otherwise, if a previous prompt is given, highlight the differences.
- * - Otherwise, no highlight.
+ * Highlighting is driven solely by manual ==marks== (no automatic diffing).
+ * Use markDifferences() to turn a diff into marks on demand.
  */
-export function highlightPrompt(current: string, previous?: string): Segment[] {
+export function highlightPrompt(current: string): Segment[] {
   if (/==[^=]+==/.test(current)) return parseManual(current);
-  if (previous && previous.trim()) return diffHighlight(current, previous);
   return [{ text: current, highlight: false }];
+}
+
+/** Strip all ==highlight== marks, returning plain text. */
+export function clearMarks(s: string): string {
+  return s.replace(/==/g, '');
+}
+
+/**
+ * Rewrite `current` so the words that differ from `previous` are wrapped in
+ * ==marks==. Any existing marks are cleared first so re-running is idempotent.
+ * If there is no previous prompt, returns the cleaned text unchanged.
+ */
+export function markDifferences(current: string, previous?: string): string {
+  const clean = clearMarks(current);
+  if (!previous || !previous.trim()) return clean;
+  return diffHighlight(clean, clearMarks(previous))
+    .map((seg) => (seg.highlight ? `==${seg.text}==` : seg.text))
+    .join('');
 }

@@ -1,6 +1,7 @@
 import type { ImageEntry, ContextImage } from '../types';
 import HighlightedPrompt from './HighlightedPrompt';
 import ImageDropzone from './ImageDropzone';
+import { markDifferences, clearMarks } from '../lib/promptDiff';
 
 interface Props {
   entry: ImageEntry;
@@ -33,7 +34,8 @@ export default function ImageEntryEditor({
     onChange({ contextImages: entry.contextImages.filter((c) => c.id !== id) });
   }
 
-  const hasHighlight = /==[^=]+==/.test(entry.prompt) || (previousPrompt?.trim().length ?? 0) > 0;
+  const hasMarks = /==[^=]+==/.test(entry.prompt);
+  const canDiff = (previousPrompt?.trim().length ?? 0) > 0 && entry.prompt.trim().length > 0;
 
   return (
     <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
@@ -81,11 +83,34 @@ export default function ImageEntryEditor({
 
         <div className="space-y-3">
           <div>
-            <div className="mb-1 flex items-center justify-between">
+            <div className="mb-1 flex items-center justify-between gap-2">
               <label className="block text-xs font-medium text-slate-600">Prompt</label>
-              <span className="text-[10px] text-slate-400">
-                wrap text in <code className="font-mono">==…==</code> to force-highlight
-              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() =>
+                    onChange({ prompt: markDifferences(entry.prompt, previousPrompt) })
+                  }
+                  disabled={!canDiff}
+                  title={
+                    canDiff
+                      ? 'Wrap words that differ from the previous figure in ==marks=='
+                      : 'Needs a previous figure with a prompt'
+                  }
+                  className="rounded border border-amber-300 bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-700 hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  ✦ Highlight diff
+                </button>
+                {hasMarks && (
+                  <button
+                    type="button"
+                    onClick={() => onChange({ prompt: clearMarks(entry.prompt) })}
+                    className="text-[11px] font-medium text-slate-500 hover:text-slate-700"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
             </div>
             <textarea
               value={entry.prompt}
@@ -94,12 +119,16 @@ export default function ImageEntryEditor({
               placeholder="The exact prompt used to generate this image…"
               className="w-full rounded-md border border-slate-300 px-2 py-1.5 font-mono text-xs focus:border-amber-400 focus:outline-none focus:ring-1 focus:ring-amber-400"
             />
-            {hasHighlight && entry.prompt && (
+            <p className="mt-1 text-[10px] text-slate-400">
+              Wrap text in <code className="font-mono">==…==</code> to highlight, or use the button
+              to mark differences from the previous figure.
+            </p>
+            {hasMarks && entry.prompt && (
               <div className="mt-1.5 rounded-md bg-white px-2 py-1.5 text-xs ring-1 ring-slate-200">
                 <span className="mr-1 text-[10px] uppercase tracking-wide text-slate-400">
-                  {/==[^=]+==/.test(entry.prompt) ? 'Highlighted' : 'Changes vs. previous'}:
+                  Preview:
                 </span>
-                <HighlightedPrompt prompt={entry.prompt} previous={previousPrompt} />
+                <HighlightedPrompt prompt={entry.prompt} />
               </div>
             )}
           </div>

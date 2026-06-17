@@ -2,13 +2,12 @@ import { highlightPrompt } from '../lib/promptDiff';
 
 interface Props {
   prompt: string;
-  previous?: string;
   className?: string;
 }
 
-/** Renders a prompt with diff/manual highlights as inline <mark> spans. */
-export default function HighlightedPrompt({ prompt, previous, className }: Props) {
-  const segments = highlightPrompt(prompt, previous);
+/** Renders a prompt with manual ==highlight== marks as inline <mark> spans. */
+export default function HighlightedPrompt({ prompt, className }: Props) {
+  const segments = highlightPrompt(prompt);
   return (
     <span className={className}>
       {segments.map((seg, i) =>
