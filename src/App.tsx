@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { pdf } from '@react-pdf/renderer';
+import { Analytics } from '@vercel/analytics/react';
 import type { Submission } from './types';
 import { emptySubmission } from './types';
 import SubmissionForm from './components/SubmissionForm';
@@ -35,6 +36,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen">
+      <Analytics />
       <header className="sticky top-0 z-10 border-b border-slate-200 bg-white/90 backdrop-blur">
         <div className="flex w-full items-center justify-between px-6 py-3">
           <div>
