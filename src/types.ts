@@ -1,3 +1,5 @@
+export type EntrySource = 'manual' | 'gemini' | 'chatgpt';
+
 export interface ImageEntry {
   id: string;
   imageUrl: string; // data URL (base64) so it survives PDF embedding
@@ -5,6 +7,16 @@ export interface ImageEntry {
   prompt: string;
   geminiLink: string;
   chatgptLink: string;
+  /** Which import group produced this entry (so a whole group can be removed). */
+  groupId?: string;
+}
+
+export interface ImportGroup {
+  id: string;
+  source: EntrySource;
+  /** The chat share link this group was imported from. */
+  link: string;
+  label: string;
 }
 
 export interface Submission {
@@ -15,9 +27,10 @@ export interface Submission {
   abstract: string;
   synthesis: string; // Markdown body
   entries: ImageEntry[];
+  groups: ImportGroup[];
 }
 
-export function emptyEntry(): ImageEntry {
+export function emptyEntry(groupId?: string): ImageEntry {
   return {
     id: crypto.randomUUID(),
     imageUrl: '',
@@ -25,6 +38,7 @@ export function emptyEntry(): ImageEntry {
     prompt: '',
     geminiLink: '',
     chatgptLink: '',
+    groupId,
   };
 }
 
@@ -50,5 +64,6 @@ Describe your approach to prompt construction, the models you compared, and how 
 > What surprised you most about the relationship between language and image?
 `,
     entries: [emptyEntry()],
+    groups: [],
   };
 }

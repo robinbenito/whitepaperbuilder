@@ -1,6 +1,7 @@
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import type { Submission } from '../types';
+import HighlightedPrompt from './HighlightedPrompt';
 
 interface Props {
   submission: Submission;
@@ -67,7 +68,11 @@ export default function WhitePaper({ submission }: Props) {
                   <span className="font-semibold text-slate-700">Figure {i + 1}.</span>{' '}
                   {e.prompt && (
                     <>
-                      Prompt: <mark className="prompt-mark">{e.prompt}</mark>
+                      Prompt:{' '}
+                      <HighlightedPrompt
+                        prompt={e.prompt}
+                        previous={i > 0 ? figured[i - 1].prompt : undefined}
+                      />
                     </>
                   )}
                   <span className="mt-2 flex flex-wrap gap-2">

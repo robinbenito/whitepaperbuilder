@@ -1,11 +1,16 @@
 import type { ImageEntry } from '../types';
+import HighlightedPrompt from './HighlightedPrompt';
 
 interface Props {
   entry: ImageEntry;
   index: number;
+  previousPrompt?: string;
+  groupLabel?: string;
   onChange: (patch: Partial<ImageEntry>) => void;
   onRemove: () => void;
   canRemove: boolean;
+  onHandleMouseDown: () => void;
+  onHandleMouseUp: () => void;
 }
 
 function readFileAsDataUrl(file: File): Promise<string> {
@@ -17,7 +22,17 @@ function readFileAsDataUrl(file: File): Promise<string> {
   });
 }
 
-export default function ImageEntryEditor({ entry, index, onChange, onRemove, canRemove }: Props) {
+export default function ImageEntryEditor({
+  entry,
+  index,
+  previousPrompt,
+  groupLabel,
+  onChange,
+  onRemove,
+  canRemove,
+  onHandleMouseDown,
+  onHandleMouseUp,
+}: Props) {
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -25,10 +40,29 @@ export default function ImageEntryEditor({ entry, index, onChange, onRemove, can
     onChange({ imageUrl: dataUrl, fileName: file.name });
   }
 
+  const hasHighlight = /==[^=]+==/.test(entry.prompt) || (previousPrompt?.trim().length ?? 0) > 0;
+
   return (
     <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
       <div className="mb-3 flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-slate-700">Figure {index + 1}</h3>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            title="Drag to reorder"
+            onMouseDown={onHandleMouseDown}
+            onMouseUp={onHandleMouseUp}
+            className="cursor-grab select-none rounded px-1 text-slate-400 hover:bg-slate-200 hover:text-slate-600 active:cursor-grabbing"
+            aria-label="Drag to reorder"
+          >
+            ⠿
+          </button>
+          <h3 className="text-sm font-semibold text-slate-700">Figure {index + 1}</h3>
+          {groupLabel && (
+            <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-medium text-blue-700">
+              {groupLabel}
+            </span>
+          )}
+        </div>
         {canRemove && (
           <button
             type="button"
@@ -63,7 +97,12 @@ export default function ImageEntryEditor({ entry, index, onChange, onRemove, can
 
         <div className="space-y-3">
           <div>
-            <label className="mb-1 block text-xs font-medium text-slate-600">Prompt</label>
+            <div className="mb-1 flex items-center justify-between">
+              <label className="block text-xs font-medium text-slate-600">Prompt</label>
+              <span className="text-[10px] text-slate-400">
+                wrap text in <code className="font-mono">==…==</code> to force-highlight
+              </span>
+            </div>
             <textarea
               value={entry.prompt}
               onChange={(e) => onChange({ prompt: e.target.value })}
@@ -71,6 +110,14 @@ export default function ImageEntryEditor({ entry, index, onChange, onRemove, can
               placeholder="The exact prompt used to generate this image…"
               className="w-full rounded-md border border-slate-300 px-2 py-1.5 font-mono text-xs focus:border-amber-400 focus:outline-none focus:ring-1 focus:ring-amber-400"
             />
+            {hasHighlight && entry.prompt && (
+              <div className="mt-1.5 rounded-md bg-white px-2 py-1.5 text-xs ring-1 ring-slate-200">
+                <span className="mr-1 text-[10px] uppercase tracking-wide text-slate-400">
+                  {/==[^=]+==/.test(entry.prompt) ? 'Highlighted' : 'Changes vs. previous'}:
+                </span>
+                <HighlightedPrompt prompt={entry.prompt} previous={previousPrompt} />
+              </div>
+            )}
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             <div>

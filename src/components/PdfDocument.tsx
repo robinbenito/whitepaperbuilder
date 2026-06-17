@@ -8,6 +8,7 @@ import {
   StyleSheet,
 } from '@react-pdf/renderer';
 import type { Submission } from '../types';
+import { highlightPrompt } from '../lib/promptDiff';
 
 const s = StyleSheet.create({
   page: {
@@ -182,7 +183,14 @@ export default function PdfDocument({ submission }: { submission: Submission }) 
                   <Text style={s.figLabel}>Figure {i + 1}. </Text>
                   {e.prompt ? (
                     <>
-                      Prompt: <Text style={s.promptMark}>{e.prompt}</Text>
+                      Prompt:{' '}
+                      {highlightPrompt(e.prompt, i > 0 ? figured[i - 1].prompt : undefined).map(
+                        (seg, k) => (
+                          <Text key={k} style={seg.highlight ? s.promptMark : undefined}>
+                            {seg.text}
+                          </Text>
+                        ),
+                      )}
                     </>
                   ) : null}
                 </Text>
