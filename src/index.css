@@ -1,0 +1,78 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  margin: 0;
+  background: #f1f5f9;
+  font-family: system-ui, -apple-system, sans-serif;
+  color: #0f172a;
+}
+
+/* Academic prose styling for the rendered markdown synthesis */
+.prose-academic {
+  font-family: Georgia, Cambria, 'Times New Roman', serif;
+  line-height: 1.75;
+  color: #1e293b;
+}
+.prose-academic h1,
+.prose-academic h2,
+.prose-academic h3 {
+  font-weight: 700;
+  line-height: 1.3;
+  margin: 1.4em 0 0.5em;
+}
+.prose-academic h1 { font-size: 1.6rem; }
+.prose-academic h2 { font-size: 1.3rem; }
+.prose-academic h3 { font-size: 1.1rem; }
+.prose-academic p { margin: 0.75em 0; }
+.prose-academic ul,
+.prose-academic ol { margin: 0.75em 0; padding-left: 1.5em; }
+.prose-academic li { margin: 0.25em 0; }
+.prose-academic blockquote {
+  border-left: 3px solid #cbd5e1;
+  margin: 1em 0;
+  padding-left: 1em;
+  color: #475569;
+  font-style: italic;
+}
+.prose-academic code {
+  font-family: 'SF Mono', Menlo, monospace;
+  background: #f1f5f9;
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+  font-size: 0.9em;
+}
+.prose-academic pre {
+  background: #0f172a;
+  color: #e2e8f0;
+  padding: 1em;
+  border-radius: 8px;
+  overflow-x: auto;
+}
+.prose-academic pre code { background: none; color: inherit; }
+.prose-academic table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1em 0;
+}
+.prose-academic th,
+.prose-academic td {
+  border: 1px solid #cbd5e1;
+  padding: 0.4em 0.7em;
+  text-align: left;
+}
+.prose-academic a { color: #1d4ed8; text-decoration: underline; }
+
+mark.prompt-mark {
+  background: #fef08a;
+  color: #713f12;
+  font-family: 'SF Mono', Menlo, monospace;
+  font-size: 0.85em;
+  padding: 0.15em 0.4em;
+  border-radius: 4px;
+}
