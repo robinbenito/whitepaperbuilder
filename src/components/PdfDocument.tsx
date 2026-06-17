@@ -56,7 +56,13 @@ const s = StyleSheet.create({
     color: '#1f2937',
   },
   figure: { marginBottom: 20 },
-  figImage: { maxHeight: 320, objectFit: 'contain', marginBottom: 6 },
+  figImage: {
+    maxWidth: '100%',
+    maxHeight: 300,
+    objectFit: 'contain',
+    alignSelf: 'center',
+    marginBottom: 6,
+  },
   contextRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 6 },
   contextLabel: { fontSize: 8, color: '#94a3b8', textTransform: 'uppercase' },
   contextImg: { width: 44, height: 44, objectFit: 'cover', borderRadius: 3 },
@@ -155,6 +161,49 @@ export default function PdfDocument({ submission }: { submission: Submission }) 
     return refs;
   });
 
+  const renderFigure = (e: (typeof figured)[number], i: number) => (
+    <View key={e.id} style={s.figure}>
+      {/* eslint-disable-next-line jsx-a11y/alt-text */}
+      {e.imageUrl ? <Image src={e.imageUrl} style={s.figImage} /> : null}
+      {e.contextImages.length > 0 && (
+        <View style={s.contextRow}>
+          <Text style={s.contextLabel}>Context inputs:</Text>
+          {e.contextImages.map((c) =>
+            c.imageUrl ? (
+              // eslint-disable-next-line jsx-a11y/alt-text
+              <Image key={c.id} src={c.imageUrl} style={s.contextImg} />
+            ) : null,
+          )}
+        </View>
+      )}
+      <Text style={s.figCaption}>
+        <Text style={s.figLabel}>Figure {i + 1}. </Text>
+        {e.prompt ? (
+          <>
+            Prompt:{' '}
+            {highlightPrompt(e.prompt, i > 0 ? figured[i - 1].prompt : undefined).map((seg, k) => (
+              <Text key={k} style={seg.highlight ? s.promptMark : undefined}>
+                {seg.text}
+              </Text>
+            ))}
+          </>
+        ) : null}
+      </Text>
+      <View style={s.badges}>
+        {e.geminiLink ? (
+          <Link src={e.geminiLink} style={s.geminiBadge}>
+            ◆ View in Gemini ↗
+          </Link>
+        ) : null}
+        {e.chatgptLink ? (
+          <Link src={e.chatgptLink} style={s.chatgptBadge}>
+            ✦ View in ChatGPT ↗
+          </Link>
+        ) : null}
+      </View>
+    </View>
+  );
+
   return (
     <Document title={title} author={studentName}>
       <Page size="A4" style={s.page}>
@@ -177,51 +226,13 @@ export default function PdfDocument({ submission }: { submission: Submission }) 
 
         {figured.length > 0 && (
           <View>
-            <Text style={s.sectionHead}>Image Documentation</Text>
-            {figured.map((e, i) => (
-              <View key={e.id} style={s.figure}>
-                {/* eslint-disable-next-line jsx-a11y/alt-text */}
-                {e.imageUrl ? <Image src={e.imageUrl} style={s.figImage} /> : null}
-                {e.contextImages.length > 0 && (
-                  <View style={s.contextRow}>
-                    <Text style={s.contextLabel}>Context inputs:</Text>
-                    {e.contextImages.map((c) =>
-                      c.imageUrl ? (
-                        // eslint-disable-next-line jsx-a11y/alt-text
-                        <Image key={c.id} src={c.imageUrl} style={s.contextImg} />
-                      ) : null,
-                    )}
-                  </View>
-                )}
-                <Text style={s.figCaption}>
-                  <Text style={s.figLabel}>Figure {i + 1}. </Text>
-                  {e.prompt ? (
-                    <>
-                      Prompt:{' '}
-                      {highlightPrompt(e.prompt, i > 0 ? figured[i - 1].prompt : undefined).map(
-                        (seg, k) => (
-                          <Text key={k} style={seg.highlight ? s.promptMark : undefined}>
-                            {seg.text}
-                          </Text>
-                        ),
-                      )}
-                    </>
-                  ) : null}
-                </Text>
-                <View style={s.badges}>
-                  {e.geminiLink ? (
-                    <Link src={e.geminiLink} style={s.geminiBadge}>
-                      ◆ View in Gemini ↗
-                    </Link>
-                  ) : null}
-                  {e.chatgptLink ? (
-                    <Link src={e.chatgptLink} style={s.chatgptBadge}>
-                      ✦ View in ChatGPT ↗
-                    </Link>
-                  ) : null}
-                </View>
-              </View>
-            ))}
+            {/* Keep the section heading attached to the first figure so it never
+                ends up orphaned on the previous page. */}
+            <View wrap={false}>
+              <Text style={s.sectionHead}>Image Documentation</Text>
+              {renderFigure(figured[0], 0)}
+            </View>
+            {figured.slice(1).map((e, i) => renderFigure(e, i + 1))}
           </View>
         )}
 
