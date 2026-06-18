@@ -2,12 +2,14 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import type { Submission } from '../types';
 import HighlightedPrompt from './HighlightedPrompt';
+import { useI18n } from '../lib/i18n';
 
 interface Props {
   submission: Submission;
 }
 
 export default function WhitePaper({ submission }: Props) {
+  const { t } = useI18n();
   const { title, studentName, course, date, abstract, synthesis, entries } = submission;
   const figured = entries.filter((e) => e.imageUrl || e.prompt);
   const references = entries.flatMap((e, i) => {
@@ -22,9 +24,9 @@ export default function WhitePaper({ submission }: Props) {
       {/* Title block */}
       <header className="mb-10 border-b border-slate-200 pb-8 text-center">
         <h1 className="!mt-0 text-[1.75rem] font-bold leading-tight text-slate-900">
-          {title || 'Untitled White Paper'}
+          {title || t('doc.untitled')}
         </h1>
-        <p className="mt-3 text-base text-slate-600">{studentName || 'Anonymous Student'}</p>
+        <p className="mt-3 text-base text-slate-600">{studentName || t('doc.anonymous')}</p>
         <p className="text-sm text-slate-500">
           {course}
           {date && ` · ${new Date(date).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}`}
@@ -35,7 +37,7 @@ export default function WhitePaper({ submission }: Props) {
       {abstract && (
         <section className="mb-8">
           <h2 className="!mt-0 text-center text-base font-bold uppercase tracking-widest text-slate-700">
-            Abstract
+            {t('doc.abstract')}
           </h2>
           <p className="mx-auto max-w-[90%] text-center text-[0.95rem] italic text-slate-600">
             {abstract}
@@ -52,7 +54,7 @@ export default function WhitePaper({ submission }: Props) {
       {figured.length > 0 && (
         <section className="mb-10">
           <h2 className="border-b border-slate-200 pb-1 text-lg font-bold text-slate-800">
-            Image Documentation
+            {t('doc.imageDoc')}
           </h2>
           <div className="space-y-10 pt-4">
             {figured.map((e, i) => (
@@ -66,7 +68,7 @@ export default function WhitePaper({ submission }: Props) {
                   {e.contextImages.length > 0 && (
                     <div className="col-span-1">
                       <span className="text-[11px] uppercase tracking-wide text-slate-400">
-                        Context inputs
+                        {t('doc.contextInputs')}
                       </span>
                       <div className="mt-1 flex flex-col gap-2">
                         {e.contextImages.map(
@@ -90,7 +92,7 @@ export default function WhitePaper({ submission }: Props) {
                         {/* Label matches "Context inputs" so the two are top-aligned;
                             the prompt itself begins on the next line. */}
                         <span className="text-[11px] uppercase tracking-wide text-slate-400">
-                          Prompt
+                          {t('doc.prompt')}
                         </span>
                         <p className="m-0 mt-1">
                           <HighlightedPrompt prompt={e.prompt} />
@@ -106,7 +108,7 @@ export default function WhitePaper({ submission }: Props) {
                             rel="noreferrer"
                             className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium !text-blue-700 !no-underline ring-1 ring-blue-200"
                           >
-                            ◆ View in Gemini ↗
+                            {t('doc.viewGemini')}
                           </a>
                         )}
                         {e.chatgptLink && (
@@ -116,7 +118,7 @@ export default function WhitePaper({ submission }: Props) {
                             rel="noreferrer"
                             className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium !text-emerald-700 !no-underline ring-1 ring-emerald-200"
                           >
-                            ✦ View in ChatGPT ↗
+                            {t('doc.viewChatGPT')}
                           </a>
                         )}
                       </span>
@@ -133,12 +135,12 @@ export default function WhitePaper({ submission }: Props) {
                   />
                 )}
                 <figcaption className="mt-2 text-center text-sm font-semibold text-slate-700">
-                  Figure {i + 1}.
+                  {t('doc.figure')} {i + 1}.
                 </figcaption>
 
                 {e.notes.trim() && (
                   <p className="mt-3 text-left text-sm italic text-slate-600">
-                    <span className="not-italic font-semibold text-slate-500">Notes: </span>
+                    <span className="not-italic font-semibold text-slate-500">{t('doc.notes')}: </span>
                     {e.notes}
                   </p>
                 )}
@@ -152,12 +154,12 @@ export default function WhitePaper({ submission }: Props) {
       {references.length > 0 && (
         <section>
           <h2 className="border-b border-slate-200 pb-1 text-lg font-bold text-slate-800">
-            References
+            {t('doc.references')}
           </h2>
           <ol className="pt-3 text-sm">
             {references.map((r, i) => (
               <li key={i} className="break-all">
-                [{i + 1}] {r.label} — conversation for Figure {r.idx}.{' '}
+                [{i + 1}] {r.label} — {t('doc.refConversation')} {r.idx}.{' '}
                 <a href={r.url} target="_blank" rel="noreferrer">
                   {r.url}
                 </a>

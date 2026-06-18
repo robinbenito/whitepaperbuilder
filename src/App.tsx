@@ -3,11 +3,14 @@ import { pdf } from '@react-pdf/renderer';
 import { Analytics } from '@vercel/analytics/react';
 import type { Submission } from './types';
 import { emptySubmission } from './types';
+import { useI18n } from './lib/i18n';
 import SubmissionForm from './components/SubmissionForm';
 import WhitePaper from './components/WhitePaper';
 import PdfDocument from './components/PdfDocument';
+import LanguageToggle from './components/LanguageToggle';
 
 export default function App() {
+  const { t, lang } = useI18n();
   const [submission, setSubmission] = useState<Submission>(emptySubmission);
   const [tab, setTab] = useState<'edit' | 'preview'>('edit');
   const [generating, setGenerating] = useState(false);
@@ -19,7 +22,7 @@ export default function App() {
   async function downloadPdf() {
     setGenerating(true);
     try {
-      const blob = await pdf(<PdfDocument submission={submission} />).toBlob();
+      const blob = await pdf(<PdfDocument submission={submission} lang={lang} />).toBlob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       const slug =
@@ -40,26 +43,23 @@ export default function App() {
       <header className="sticky top-0 z-10 border-b border-slate-200 bg-white/90 backdrop-blur">
         <div className="flex w-full items-center justify-between px-6 py-3">
           <div>
-            <h1 className="text-base font-bold text-slate-900">
-              Generative Image — White Paper Builder
-            </h1>
-            <p className="text-xs text-slate-500">
-              Document your prompt experiments and export an academic PDF.
-            </p>
+            <h1 className="text-base font-bold text-slate-900">{t('app.title')}</h1>
+            <p className="text-xs text-slate-500">{t('app.subtitle')}</p>
           </div>
           <div className="flex items-center gap-2">
+            <LanguageToggle />
             <div className="flex rounded-md border border-slate-300 p-0.5 text-xs font-medium md:hidden">
               <button
                 onClick={() => setTab('edit')}
                 className={`rounded px-3 py-1 ${tab === 'edit' ? 'bg-slate-800 text-white' : 'text-slate-600'}`}
               >
-                Edit
+                {t('tab.edit')}
               </button>
               <button
                 onClick={() => setTab('preview')}
                 className={`rounded px-3 py-1 ${tab === 'preview' ? 'bg-slate-800 text-white' : 'text-slate-600'}`}
               >
-                Preview
+                {t('tab.preview')}
               </button>
             </div>
             <button
@@ -67,7 +67,7 @@ export default function App() {
               disabled={generating}
               className="rounded-md bg-amber-500 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-amber-600 disabled:opacity-60"
             >
-              {generating ? 'Generating…' : '⬇ Download PDF'}
+              {generating ? t('download.generating') : t('download.pdf')}
             </button>
           </div>
         </div>
@@ -88,7 +88,7 @@ export default function App() {
         <section className={`${tab === 'preview' ? 'block' : 'hidden'} min-w-0 md:block`}>
           <div className="sticky top-20">
             <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-400">
-              Live preview
+              {t('preview.live')}
             </p>
             <div className="max-h-[calc(100vh-7rem)] overflow-y-auto rounded-xl bg-slate-200/60 p-4">
               <WhitePaper submission={submission} />

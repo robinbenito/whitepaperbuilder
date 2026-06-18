@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import type { Submission, ImageEntry, ImportGroup } from '../types';
 import { emptyEntry } from '../types';
 import type { ScrapedPair } from '../lib/geminiImport';
+import { useI18n } from '../lib/i18n';
 import ImageEntryEditor from './ImageEntryEditor';
 import GeminiImport from './GeminiImport';
 
@@ -11,6 +12,7 @@ interface Props {
 }
 
 export default function SubmissionForm({ submission, onChange }: Props) {
+  const { t } = useI18n();
   const dragIndex = useRef<number | null>(null);
   const [dragEnabledId, setDragEnabledId] = useState<string | null>(null);
   const [overIndex, setOverIndex] = useState<number | null>(null);
@@ -72,10 +74,10 @@ export default function SubmissionForm({ submission, onChange }: Props) {
     <div className="space-y-6">
       <section className="space-y-3">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
-          Title block
+          {t('form.titleBlock')}
         </h2>
         <div>
-          <label className={label}>Paper title</label>
+          <label className={label}>{t('form.paperTitle')}</label>
           <input
             value={submission.title}
             onChange={(e) => onChange({ title: e.target.value })}
@@ -84,7 +86,7 @@ export default function SubmissionForm({ submission, onChange }: Props) {
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
           <div>
-            <label className={label}>Student name</label>
+            <label className={label}>{t('form.studentName')}</label>
             <input
               value={submission.studentName}
               onChange={(e) => onChange({ studentName: e.target.value })}
@@ -93,7 +95,7 @@ export default function SubmissionForm({ submission, onChange }: Props) {
             />
           </div>
           <div>
-            <label className={label}>Course</label>
+            <label className={label}>{t('form.course')}</label>
             <input
               value={submission.course}
               onChange={(e) => onChange({ course: e.target.value })}
@@ -102,7 +104,7 @@ export default function SubmissionForm({ submission, onChange }: Props) {
           </div>
         </div>
         <div>
-          <label className={label}>Date</label>
+          <label className={label}>{t('form.date')}</label>
           <input
             type="date"
             value={submission.date}
@@ -113,7 +115,9 @@ export default function SubmissionForm({ submission, onChange }: Props) {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Abstract</h2>
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
+          {t('form.abstract')}
+        </h2>
         <textarea
           value={submission.abstract}
           onChange={(e) => onChange({ abstract: e.target.value })}
@@ -124,7 +128,8 @@ export default function SubmissionForm({ submission, onChange }: Props) {
 
       <section className="space-y-3">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
-          Synthesis <span className="font-normal lowercase text-slate-400">(Markdown)</span>
+          {t('form.synthesis')}{' '}
+          <span className="font-normal lowercase text-slate-400">{t('form.markdown')}</span>
         </h2>
         <textarea
           value={submission.synthesis}
@@ -137,14 +142,14 @@ export default function SubmissionForm({ submission, onChange }: Props) {
       <section className="space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
-            Image documentation
+            {t('form.imageDoc')}
           </h2>
           <button
             type="button"
             onClick={addEntry}
             className="rounded-md bg-slate-800 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-700"
           >
-            + Add figure
+            {t('form.addFigure')}
           </button>
         </div>
 
@@ -162,15 +167,15 @@ export default function SubmissionForm({ submission, onChange }: Props) {
                   className="flex items-center justify-between rounded-md bg-blue-50 px-3 py-1.5 text-xs ring-1 ring-blue-200"
                 >
                   <span className="truncate text-blue-800">
-                    <span className="font-medium">{g.label}</span> — {count} figure(s) ·{' '}
-                    <span className="text-blue-600/70">{g.link}</span>
+                    <span className="font-medium">{g.label}</span> — {count} {t('form.figuresCount')}{' '}
+                    · <span className="text-blue-600/70">{g.link}</span>
                   </span>
                   <button
                     type="button"
                     onClick={() => removeGroup(g.id)}
                     className="ml-2 shrink-0 font-medium text-red-600 hover:text-red-800"
                   >
-                    Delete batch
+                    {t('form.deleteBatch')}
                   </button>
                 </div>
               );

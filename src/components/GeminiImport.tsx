@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { scrapeGemini, parsePastedContent, type ScrapedPair } from '../lib/geminiImport';
+import { useI18n } from '../lib/i18n';
 
 interface Props {
   onImport: (link: string, pairs: ScrapedPair[]) => void;
@@ -11,6 +12,7 @@ interface Props {
  * paste box so the user can paste the conversation / saved HTML instead.
  */
 export default function GeminiImport({ onImport }: Props) {
+  const { t } = useI18n();
   const [link, setLink] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading'>('idle');
   const [message, setMessage] = useState<string | null>(null);
@@ -53,12 +55,9 @@ export default function GeminiImport({ onImport }: Props) {
   return (
     <div className="rounded-lg border border-blue-200 bg-blue-50/60 p-4">
       <h3 className="mb-1 flex items-center gap-1.5 text-sm font-semibold text-blue-800">
-        ◆ Import from Gemini
+        {t('gemini.title')}
       </h3>
-      <p className="mb-3 text-xs text-blue-700/80">
-        Paste a Gemini share link to auto-fill image-prompt pairs. Imported items are grouped so
-        you can remove the whole batch if it was the wrong link.
-      </p>
+      <p className="mb-3 text-xs text-blue-700/80">{t('gemini.desc')}</p>
       <div className="flex gap-2">
         <input
           type="url"
@@ -73,7 +72,7 @@ export default function GeminiImport({ onImport }: Props) {
           disabled={status === 'loading' || !link.trim()}
           className="shrink-0 rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50"
         >
-          {status === 'loading' ? 'Scraping…' : 'Import'}
+          {status === 'loading' ? t('gemini.scraping') : t('gemini.import')}
         </button>
       </div>
 
@@ -85,7 +84,7 @@ export default function GeminiImport({ onImport }: Props) {
             value={pasted}
             onChange={(e) => setPasted(e.target.value)}
             rows={5}
-            placeholder="Paste the conversation text or saved page HTML here. Blank-line-separated blocks become prompts; <img> tags become images."
+            placeholder={t('gemini.pastePlaceholder')}
             className="w-full rounded-md border border-blue-300 px-2 py-1.5 font-mono text-[11px] focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
           <button
@@ -94,7 +93,7 @@ export default function GeminiImport({ onImport }: Props) {
             disabled={!pasted.trim()}
             className="rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50"
           >
-            Parse pasted content
+            {t('gemini.parse')}
           </button>
         </div>
       )}

@@ -9,6 +9,7 @@ import {
 } from '@react-pdf/renderer';
 import type { Submission } from '../types';
 import { highlightPrompt } from '../lib/promptDiff';
+import { makeTranslator, type Lang } from '../lib/i18n';
 
 const s = StyleSheet.create({
   page: {
@@ -165,7 +166,14 @@ function renderMarkdown(md: string) {
   return blocks;
 }
 
-export default function PdfDocument({ submission }: { submission: Submission }) {
+export default function PdfDocument({
+  submission,
+  lang = 'en',
+}: {
+  submission: Submission;
+  lang?: Lang;
+}) {
+  const t = makeTranslator(lang);
   const { title, studentName, course, date, abstract, synthesis, entries } = submission;
   const figured = entries.filter((e) => e.imageUrl || e.prompt);
   const references = entries.flatMap((e, i) => {
@@ -184,7 +192,7 @@ export default function PdfDocument({ submission }: { submission: Submission }) 
         <View style={hasContext ? s.figBody : { marginBottom: 8 }}>
           {hasContext && (
             <View style={s.contextCol}>
-              <Text style={s.contextLabel}>Context inputs</Text>
+              <Text style={s.contextLabel}>{t('doc.contextInputs')}</Text>
               <View style={s.contextImgs}>
                 {e.contextImages.map((c) =>
                   c.imageUrl ? (
@@ -199,7 +207,7 @@ export default function PdfDocument({ submission }: { submission: Submission }) 
           <View style={hasContext ? s.promptCol : undefined}>
             {e.prompt ? (
               <Text style={s.figCaption}>
-                Prompt:{' '}
+                {t('doc.prompt')}:{' '}
                 {highlightPrompt(e.prompt).map((seg, k) => (
                   <Text key={k} style={seg.highlight ? s.promptMark : undefined}>
                     {seg.text}
@@ -211,12 +219,12 @@ export default function PdfDocument({ submission }: { submission: Submission }) 
               <View style={s.badges}>
                 {e.geminiLink ? (
                   <Link src={e.geminiLink} style={s.geminiBadge}>
-                    ◆ View in Gemini ↗
+                    {t('doc.viewGemini')}
                   </Link>
                 ) : null}
                 {e.chatgptLink ? (
                   <Link src={e.chatgptLink} style={s.chatgptBadge}>
-                    ✦ View in ChatGPT ↗
+                    {t('doc.viewChatGPT')}
                   </Link>
                 ) : null}
               </View>
@@ -227,11 +235,11 @@ export default function PdfDocument({ submission }: { submission: Submission }) 
         {/* Result image, captioned by its figure number. */}
         {/* eslint-disable-next-line jsx-a11y/alt-text */}
         {e.imageUrl ? <Image src={e.imageUrl} style={s.figImage} /> : null}
-        <Text style={s.figNumber}>Figure {i + 1}.</Text>
+        <Text style={s.figNumber}>{t('doc.figure')} {i + 1}.</Text>
 
         {e.notes.trim() ? (
           <Text style={s.figNotes}>
-            <Text style={{ fontFamily: 'Times-Bold', fontStyle: 'normal' }}>Notes: </Text>
+            <Text style={{ fontFamily: 'Times-Bold', fontStyle: 'normal' }}>{t('doc.notes')}: </Text>
             {e.notes}
           </Text>
         ) : null}
@@ -242,8 +250,8 @@ export default function PdfDocument({ submission }: { submission: Submission }) 
   return (
     <Document title={title} author={studentName}>
       <Page size="A4" style={s.page}>
-        <Text style={s.title}>{title || 'Untitled White Paper'}</Text>
-        <Text style={s.author}>{studentName || 'Anonymous Student'}</Text>
+        <Text style={s.title}>{title || t('doc.untitled')}</Text>
+        <Text style={s.author}>{studentName || t('doc.anonymous')}</Text>
         <Text style={s.meta}>
           {course}
           {date && ` · ${new Date(date).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}`}
@@ -252,7 +260,7 @@ export default function PdfDocument({ submission }: { submission: Submission }) 
 
         {abstract ? (
           <View>
-            <Text style={s.abstractHead}>ABSTRACT</Text>
+            <Text style={s.abstractHead}>{t('doc.abstract').toUpperCase()}</Text>
             <Text style={s.abstract}>{abstract}</Text>
           </View>
         ) : null}
@@ -264,7 +272,7 @@ export default function PdfDocument({ submission }: { submission: Submission }) 
             {/* Keep the section heading attached to the first figure so it never
                 ends up orphaned on the previous page. */}
             <View wrap={false}>
-              <Text style={s.sectionHead}>Image Documentation</Text>
+              <Text style={s.sectionHead}>{t('doc.imageDoc')}</Text>
               {renderFigure(figured[0], 0)}
             </View>
             {figured.slice(1).map((e, i) => renderFigure(e, i + 1))}
@@ -273,10 +281,10 @@ export default function PdfDocument({ submission }: { submission: Submission }) 
 
         {references.length > 0 && (
           <View>
-            <Text style={s.sectionHead}>References</Text>
+            <Text style={s.sectionHead}>{t('doc.references')}</Text>
             {references.map((r, i) => (
               <Text key={i} style={s.refItem}>
-                [{i + 1}] {r.label} — conversation for Figure {r.idx}.{' '}
+                [{i + 1}] {r.label} — {t('doc.refConversation')} {r.idx}.{' '}
                 <Link src={r.url} style={s.refLink}>
                   {r.url}
                 </Link>
