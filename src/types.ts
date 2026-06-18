@@ -13,6 +13,8 @@ export interface ImageEntry {
   prompt: string;
   geminiLink: string;
   chatgptLink: string;
+  /** Optional free-text notes shown beneath the figure. */
+  notes: string;
   /** Optional reference images that were fed into the model as prompt context. */
   contextImages: ContextImage[];
   /** Which import group produced this entry (so a whole group can be removed). */
@@ -46,6 +48,7 @@ export function emptyEntry(groupId?: string): ImageEntry {
     prompt: '',
     geminiLink: '',
     chatgptLink: '',
+    notes: '',
     contextImages: [],
     groupId,
   };

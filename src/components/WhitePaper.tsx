@@ -56,26 +56,35 @@ export default function WhitePaper({ submission }: Props) {
           </h2>
           <div className="space-y-10 pt-4">
             {figured.map((e, i) => (
-              <figure key={e.id}>
-                {e.imageUrl && (
-                  <img
-                    src={e.imageUrl}
-                    alt={`Figure ${i + 1}`}
-                    className="mx-auto max-h-[460px] rounded-md ring-1 ring-slate-200"
-                  />
-                )}
-                {/* Figure number is the caption of the main image */}
-                <figcaption className="mt-2 text-center text-sm font-semibold text-slate-700">
-                  Figure {i + 1}.
-                </figcaption>
-
-                {/* Two columns: prompt | context imagery. One column when no context. */}
+              <figure key={e.id} className="border-b border-slate-300 pb-8">
+                {/* Inputs (context + prompt) sit above the image to show cause → effect. */}
                 <div
-                  className={`mt-3 grid gap-5 text-left text-sm text-slate-600 ${
-                    e.contextImages.length > 0 ? 'sm:grid-cols-[1fr_auto]' : 'grid-cols-1'
+                  className={`mb-4 grid gap-5 text-left text-sm text-slate-600 ${
+                    e.contextImages.length > 0 ? 'grid-cols-3' : 'grid-cols-1'
                   }`}
                 >
-                  <div>
+                  {e.contextImages.length > 0 && (
+                    <div className="col-span-1">
+                      <span className="text-[11px] uppercase tracking-wide text-slate-400">
+                        Context inputs
+                      </span>
+                      <div className="mt-1 flex flex-col gap-2">
+                        {e.contextImages.map(
+                          (c) =>
+                            c.imageUrl && (
+                              <img
+                                key={c.id}
+                                src={c.imageUrl}
+                                alt="context input"
+                                className="max-h-48 w-full rounded object-contain ring-1 ring-slate-200"
+                              />
+                            ),
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className={e.contextImages.length > 0 ? 'col-span-2' : ''}>
                     {e.prompt && (
                       <p className="m-0">
                         <span className="text-[11px] uppercase tracking-wide text-slate-400">
@@ -109,28 +118,26 @@ export default function WhitePaper({ submission }: Props) {
                       </span>
                     )}
                   </div>
-
-                  {e.contextImages.length > 0 && (
-                    <div className="sm:w-44">
-                      <span className="text-[11px] uppercase tracking-wide text-slate-400">
-                        Context inputs
-                      </span>
-                      <div className="mt-1 flex flex-wrap gap-2">
-                        {e.contextImages.map(
-                          (c) =>
-                            c.imageUrl && (
-                              <img
-                                key={c.id}
-                                src={c.imageUrl}
-                                alt="context input"
-                                className="h-14 w-14 rounded object-cover ring-1 ring-slate-200"
-                              />
-                            ),
-                        )}
-                      </div>
-                    </div>
-                  )}
                 </div>
+
+                {/* Result image, captioned by its figure number. */}
+                {e.imageUrl && (
+                  <img
+                    src={e.imageUrl}
+                    alt={`Figure ${i + 1}`}
+                    className="mx-auto max-h-[460px] rounded-md ring-1 ring-slate-200"
+                  />
+                )}
+                <figcaption className="mt-2 text-center text-sm font-semibold text-slate-700">
+                  Figure {i + 1}.
+                </figcaption>
+
+                {e.notes.trim() && (
+                  <p className="mt-3 text-left text-sm italic text-slate-600">
+                    <span className="not-italic font-semibold text-slate-500">Notes: </span>
+                    {e.notes}
+                  </p>
+                )}
               </figure>
             ))}
           </div>

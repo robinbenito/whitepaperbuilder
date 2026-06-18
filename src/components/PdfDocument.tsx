@@ -55,7 +55,12 @@ const s = StyleSheet.create({
     marginBottom: 10,
     color: '#1f2937',
   },
-  figure: { marginBottom: 20 },
+  figure: {
+    marginBottom: 16,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#cbd5e1',
+  },
   figImage: {
     maxWidth: '100%',
     maxHeight: 300,
@@ -68,15 +73,15 @@ const s = StyleSheet.create({
     fontFamily: 'Times-Bold',
     textAlign: 'center',
     color: '#334155',
-    marginBottom: 6,
   },
-  figBody: { flexDirection: 'row', gap: 14 },
-  figCol: { flex: 1 },
-  contextCol: { width: 120 },
+  figBody: { flexDirection: 'row', gap: 14, marginBottom: 8 },
+  contextCol: { flex: 1 },
+  promptCol: { flex: 2 },
   contextLabel: { fontSize: 8, color: '#94a3b8', textTransform: 'uppercase', marginBottom: 3 },
-  contextImgs: { flexDirection: 'row', flexWrap: 'wrap', gap: 4 },
-  contextImg: { width: 44, height: 44, objectFit: 'cover', borderRadius: 3 },
+  contextImgs: { flexDirection: 'column', gap: 4 },
+  contextImg: { width: '100%', maxHeight: 130, objectFit: 'contain', borderRadius: 3 },
   figCaption: { fontSize: 10, color: '#475569' },
+  figNotes: { fontSize: 9.5, fontStyle: 'italic', color: '#475569', marginTop: 6 },
   promptMark: {
     backgroundColor: '#fef08a',
     color: '#713f12',
@@ -174,14 +179,24 @@ export default function PdfDocument({ submission }: { submission: Submission }) 
     const hasContext = e.contextImages.some((c) => c.imageUrl);
     return (
       <View key={e.id} style={s.figure}>
-        {/* eslint-disable-next-line jsx-a11y/alt-text */}
-        {e.imageUrl ? <Image src={e.imageUrl} style={s.figImage} /> : null}
-        {/* Figure number captions the main image */}
-        <Text style={s.figNumber}>Figure {i + 1}.</Text>
+        {/* Inputs (context + prompt) sit above the image to show cause → effect.
+            Context occupies the left third, prompt the remaining two thirds. */}
+        <View style={hasContext ? s.figBody : { marginBottom: 8 }}>
+          {hasContext && (
+            <View style={s.contextCol}>
+              <Text style={s.contextLabel}>Context inputs</Text>
+              <View style={s.contextImgs}>
+                {e.contextImages.map((c) =>
+                  c.imageUrl ? (
+                    // eslint-disable-next-line jsx-a11y/alt-text
+                    <Image key={c.id} src={c.imageUrl} style={s.contextImg} />
+                  ) : null,
+                )}
+              </View>
+            </View>
+          )}
 
-        {/* Two columns: prompt + links | context imagery. One column if no context. */}
-        <View style={hasContext ? s.figBody : undefined}>
-          <View style={hasContext ? s.figCol : undefined}>
+          <View style={hasContext ? s.promptCol : undefined}>
             {e.prompt ? (
               <Text style={s.figCaption}>
                 Prompt:{' '}
@@ -207,21 +222,19 @@ export default function PdfDocument({ submission }: { submission: Submission }) 
               </View>
             )}
           </View>
-
-          {hasContext && (
-            <View style={s.contextCol}>
-              <Text style={s.contextLabel}>Context inputs</Text>
-              <View style={s.contextImgs}>
-                {e.contextImages.map((c) =>
-                  c.imageUrl ? (
-                    // eslint-disable-next-line jsx-a11y/alt-text
-                    <Image key={c.id} src={c.imageUrl} style={s.contextImg} />
-                  ) : null,
-                )}
-              </View>
-            </View>
-          )}
         </View>
+
+        {/* Result image, captioned by its figure number. */}
+        {/* eslint-disable-next-line jsx-a11y/alt-text */}
+        {e.imageUrl ? <Image src={e.imageUrl} style={s.figImage} /> : null}
+        <Text style={s.figNumber}>Figure {i + 1}.</Text>
+
+        {e.notes.trim() ? (
+          <Text style={s.figNotes}>
+            <Text style={{ fontFamily: 'Times-Bold', fontStyle: 'normal' }}>Notes: </Text>
+            {e.notes}
+          </Text>
+        ) : null}
       </View>
     );
   };

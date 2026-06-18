@@ -194,6 +194,19 @@ export default function ImageEntryEditor({
               </div>
             </div>
           </div>
+
+          <div>
+            <label className="mb-1 block text-xs font-medium text-slate-600">
+              Notes <span className="font-normal text-slate-400">(optional)</span>
+            </label>
+            <textarea
+              value={entry.notes}
+              onChange={(e) => onChange({ notes: e.target.value })}
+              rows={2}
+              placeholder="Observations shown beneath this figure…"
+              className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-xs focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-400"
+            />
+          </div>
         </div>
       </div>
     </div>
