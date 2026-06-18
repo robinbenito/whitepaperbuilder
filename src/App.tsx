@@ -2,17 +2,34 @@ import { useState } from 'react';
 import { pdf } from '@react-pdf/renderer';
 import type { Submission } from './types';
 import { emptySubmission } from './types';
+import { loadSubmission, clearSubmission } from './lib/persistence';
+import { useAutosave } from './lib/useAutosave';
 import SubmissionForm from './components/SubmissionForm';
 import WhitePaper from './components/WhitePaper';
 import PdfDocument from './components/PdfDocument';
 
 export default function App() {
-  const [submission, setSubmission] = useState<Submission>(emptySubmission);
+  // Restore a previously saved draft so users can come and go and keep iterating.
+  const [restoredDraft] = useState(() => loadSubmission());
+  const [submission, setSubmission] = useState<Submission>(() => restoredDraft ?? emptySubmission());
   const [tab, setTab] = useState<'edit' | 'preview'>('edit');
   const [generating, setGenerating] = useState(false);
+  const [showRestored, setShowRestored] = useState(!!restoredDraft);
+
+  const saveStatus = useAutosave(submission);
 
   function patch(p: Partial<Submission>) {
     setSubmission((prev) => ({ ...prev, ...p }));
+  }
+
+  function startOver() {
+    const ok = window.confirm(
+      'Start a new white paper? This clears the draft saved in this browser and cannot be undone.',
+    );
+    if (!ok) return;
+    clearSubmission();
+    setSubmission(emptySubmission());
+    setTab('edit');
   }
 
   async function downloadPdf() {
@@ -46,6 +63,13 @@ export default function App() {
             </p>
           </div>
           <div className="flex items-center gap-2">
+            <SaveIndicator status={saveStatus} />
+            <button
+              onClick={startOver}
+              className="hidden rounded-md border border-slate-300 px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50 sm:inline-block"
+            >
+              Start over
+            </button>
             <div className="flex rounded-md border border-slate-300 p-0.5 text-xs font-medium md:hidden">
               <button
                 onClick={() => setTab('edit')}
@@ -71,6 +95,19 @@ export default function App() {
         </div>
       </header>
 
+      {showRestored && (
+        <div className="flex items-center justify-between gap-3 border-b border-amber-200 bg-amber-50 px-6 py-2 text-xs text-amber-800">
+          <span>↺ Restored your previous draft from this browser.</span>
+          <button
+            onClick={() => setShowRestored(false)}
+            className="font-medium text-amber-700 hover:text-amber-900"
+            aria-label="Dismiss"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+
       <main className="grid w-full gap-6 px-6 py-6 md:grid-cols-[minmax(360px,440px)_1fr]">
         <section className={`${tab === 'edit' ? 'block' : 'hidden'} md:block`}>
           <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -90,5 +127,24 @@ export default function App() {
         </section>
       </main>
     </div>
+  );
+}
+
+function SaveIndicator({ status }: { status: import('./lib/useAutosave').SaveStatus }) {
+  const map: Record<string, { text: string; className: string }> = {
+    idle: { text: 'Saved locally', className: 'text-slate-400' },
+    saving: { text: 'Saving…', className: 'text-slate-400' },
+    saved: { text: '✓ Saved locally', className: 'text-emerald-600' },
+    quota: { text: '⚠ Draft too large to save', className: 'text-amber-600' },
+    error: { text: '⚠ Couldn’t save', className: 'text-amber-600' },
+  };
+  const { text, className } = map[status] ?? map.idle;
+  return (
+    <span
+      className={`hidden text-xs font-medium sm:inline ${className}`}
+      title="Your draft is stored only in this browser — it never leaves your device."
+    >
+      {text}
+    </span>
   );
 }
