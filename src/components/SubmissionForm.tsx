@@ -4,6 +4,7 @@ import { emptyEntry } from '../types';
 import type { ScrapedPair } from '../lib/geminiImport';
 import ImageEntryEditor from './ImageEntryEditor';
 import GeminiImport from './GeminiImport';
+import SynthesizePanel from './SynthesizePanel';
 
 interface Props {
   submission: Submission;
@@ -132,6 +133,7 @@ export default function SubmissionForm({ submission, onChange }: Props) {
           rows={14}
           className={`${field} font-mono text-xs leading-relaxed`}
         />
+        <SynthesizePanel onApply={onChange} />
       </section>
 
       <section className="space-y-3">

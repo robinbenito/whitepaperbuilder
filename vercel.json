@@ -3,6 +3,9 @@
   "functions": {
     "api/gemini-scrape.ts": {
       "maxDuration": 60
+    },
+    "api/synthesize.ts": {
+      "maxDuration": 60
     }
   }
 }
