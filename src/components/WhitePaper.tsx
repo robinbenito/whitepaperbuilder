@@ -86,12 +86,16 @@ export default function WhitePaper({ submission }: Props) {
 
                   <div className={e.contextImages.length > 0 ? 'col-span-2' : ''}>
                     {e.prompt && (
-                      <p className="m-0">
+                      <div>
+                        {/* Label matches "Context inputs" so the two are top-aligned;
+                            the prompt itself begins on the next line. */}
                         <span className="text-[11px] uppercase tracking-wide text-slate-400">
-                          Prompt:{' '}
+                          Prompt
                         </span>
-                        <HighlightedPrompt prompt={e.prompt} />
-                      </p>
+                        <p className="m-0 mt-1">
+                          <HighlightedPrompt prompt={e.prompt} />
+                        </p>
+                      </div>
                     )}
                     {(e.geminiLink || e.chatgptLink) && (
                       <span className="mt-2 flex flex-wrap gap-2">
