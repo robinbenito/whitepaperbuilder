@@ -3,7 +3,9 @@ import { pdf } from '@react-pdf/renderer';
 import { Analytics } from '@vercel/analytics/react';
 import type { Submission } from './types';
 import { emptySubmission } from './types';
-import { useI18n } from './lib/i18n';
+import { useI18n, type Translate } from './lib/i18n';
+import { loadSubmission, clearSubmission } from './lib/persistence';
+import { useAutosave, type SaveStatus } from './lib/useAutosave';
 import SubmissionForm from './components/SubmissionForm';
 import WhitePaper from './components/WhitePaper';
 import PdfDocument from './components/PdfDocument';
@@ -11,12 +13,24 @@ import LanguageToggle from './components/LanguageToggle';
 
 export default function App() {
   const { t, lang } = useI18n();
-  const [submission, setSubmission] = useState<Submission>(emptySubmission);
+  // Restore a previously saved draft so users can come and go and keep iterating.
+  const [restoredDraft] = useState(() => loadSubmission());
+  const [submission, setSubmission] = useState<Submission>(() => restoredDraft ?? emptySubmission());
   const [tab, setTab] = useState<'edit' | 'preview'>('edit');
   const [generating, setGenerating] = useState(false);
+  const [showRestored, setShowRestored] = useState(!!restoredDraft);
+
+  const saveStatus = useAutosave(submission);
 
   function patch(p: Partial<Submission>) {
     setSubmission((prev) => ({ ...prev, ...p }));
+  }
+
+  function startOver() {
+    if (!window.confirm(t('startOver.confirm'))) return;
+    clearSubmission();
+    setSubmission(emptySubmission());
+    setTab('edit');
   }
 
   async function downloadPdf() {
@@ -47,6 +61,13 @@ export default function App() {
             <p className="text-xs text-slate-500">{t('app.subtitle')}</p>
           </div>
           <div className="flex items-center gap-2">
+            <SaveIndicator status={saveStatus} t={t} />
+            <button
+              onClick={startOver}
+              className="hidden rounded-md border border-slate-300 px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50 sm:inline-block"
+            >
+              {t('startOver')}
+            </button>
             <LanguageToggle />
             <div className="flex rounded-md border border-slate-300 p-0.5 text-xs font-medium md:hidden">
               <button
@@ -73,6 +94,18 @@ export default function App() {
         </div>
       </header>
 
+      {showRestored && (
+        <div className="flex items-center justify-between gap-3 border-b border-amber-200 bg-amber-50 px-6 py-2 text-xs text-amber-800">
+          <span>{t('restore.banner')}</span>
+          <button
+            onClick={() => setShowRestored(false)}
+            className="font-medium text-amber-700 hover:text-amber-900"
+          >
+            {t('restore.dismiss')}
+          </button>
+        </div>
+      )}
+
       {/*
         The editor (left) grows to claim spare width while the preview (right) is
         capped at the document's natural width (800px page + 2rem padding = 832px)
@@ -97,5 +130,21 @@ export default function App() {
         </section>
       </main>
     </div>
+  );
+}
+
+function SaveIndicator({ status, t }: { status: SaveStatus; t: Translate }) {
+  const map: Record<SaveStatus, { key: Parameters<Translate>[0]; className: string }> = {
+    idle: { key: 'save.saved', className: 'text-slate-400' },
+    saving: { key: 'save.saving', className: 'text-slate-400' },
+    saved: { key: 'save.savedTick', className: 'text-emerald-600' },
+    quota: { key: 'save.quota', className: 'text-amber-600' },
+    error: { key: 'save.error', className: 'text-amber-600' },
+  };
+  const { key, className } = map[status];
+  return (
+    <span className={`hidden text-xs font-medium sm:inline ${className}`} title={t('save.tooltip')}>
+      {t(key)}
+    </span>
   );
 }

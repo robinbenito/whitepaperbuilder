@@ -17,6 +17,27 @@ const dict = {
   'download.generating': { en: 'Generating…', de: 'Wird erstellt…' },
   'lang.label': { en: 'Language', de: 'Sprache' },
 
+  // Autosave / restore
+  'save.saved': { en: 'Saved locally', de: 'Lokal gespeichert' },
+  'save.saving': { en: 'Saving…', de: 'Wird gespeichert…' },
+  'save.savedTick': { en: '✓ Saved locally', de: '✓ Lokal gespeichert' },
+  'save.quota': { en: '⚠ Draft too large to save', de: '⚠ Entwurf zu groß zum Speichern' },
+  'save.error': { en: '⚠ Couldn’t save', de: '⚠ Speichern fehlgeschlagen' },
+  'save.tooltip': {
+    en: 'Your draft is stored only in this browser — it never leaves your device.',
+    de: 'Dein Entwurf wird nur in diesem Browser gespeichert — er verlässt dein Gerät nie.',
+  },
+  'startOver': { en: 'Start over', de: 'Neu beginnen' },
+  'startOver.confirm': {
+    en: 'Start a new white paper? This clears the draft saved in this browser and cannot be undone.',
+    de: 'Ein neues White Paper beginnen? Dies löscht den in diesem Browser gespeicherten Entwurf unwiderruflich.',
+  },
+  'restore.banner': {
+    en: '↺ Restored your previous draft from this browser.',
+    de: '↺ Vorherigen Entwurf aus diesem Browser wiederhergestellt.',
+  },
+  'restore.dismiss': { en: 'Dismiss', de: 'Ausblenden' },
+
   // Form sections / fields
   'form.titleBlock': { en: 'Title block', de: 'Titelblock' },
   'form.paperTitle': { en: 'Paper title', de: 'Titel der Arbeit' },
