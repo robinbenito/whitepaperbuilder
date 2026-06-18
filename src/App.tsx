@@ -71,7 +71,12 @@ export default function App() {
         </div>
       </header>
 
-      <main className="grid w-full gap-6 px-6 py-6 md:grid-cols-[minmax(360px,440px)_1fr]">
+      {/*
+        The editor (left) grows to claim spare width while the preview (right) is
+        capped at the document's natural width (800px page + 2rem padding = 832px)
+        so very wide viewports don't leave empty gutters around the preview.
+      */}
+      <main className="grid w-full gap-6 px-6 py-6 md:grid-cols-[minmax(360px,1fr)_minmax(0,832px)]">
         <section className={`${tab === 'edit' ? 'block' : 'hidden'} md:block`}>
           <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
             <SubmissionForm submission={submission} onChange={patch} />
