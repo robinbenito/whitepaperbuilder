@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { pdf } from '@react-pdf/renderer';
 import { Analytics } from '@vercel/analytics/react';
 import type { Submission } from './types';
@@ -12,13 +12,39 @@ import PdfDocument from './components/PdfDocument';
 import LanguageToggle from './components/LanguageToggle';
 
 export default function App() {
+  // Restore a previously saved draft so users can come and go and keep
+  // iterating. Loading is async (IndexedDB), so the editor — and with it the
+  // autosave that could overwrite the stored draft — only mounts once the
+  // load has finished. The local read takes milliseconds.
+  const [restored, setRestored] = useState<{ draft: Submission | null } | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    loadSubmission()
+      .catch(() => null)
+      .then((draft) => {
+        if (!cancelled) setRestored({ draft });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (!restored) return <Analytics />;
+  return (
+    <>
+      <Analytics />
+      <Editor initialDraft={restored.draft} />
+    </>
+  );
+}
+
+function Editor({ initialDraft }: { initialDraft: Submission | null }) {
   const { t, lang } = useI18n();
-  // Restore a previously saved draft so users can come and go and keep iterating.
-  const [restoredDraft] = useState(() => loadSubmission());
-  const [submission, setSubmission] = useState<Submission>(() => restoredDraft ?? emptySubmission());
+  const [submission, setSubmission] = useState<Submission>(() => initialDraft ?? emptySubmission());
   const [tab, setTab] = useState<'edit' | 'preview'>('edit');
   const [generating, setGenerating] = useState(false);
-  const [showRestored, setShowRestored] = useState(!!restoredDraft);
+  const [showRestored, setShowRestored] = useState(!!initialDraft);
 
   const saveStatus = useAutosave(submission);
 
@@ -28,7 +54,7 @@ export default function App() {
 
   function startOver() {
     if (!window.confirm(t('startOver.confirm'))) return;
-    clearSubmission();
+    void clearSubmission();
     setSubmission(emptySubmission());
     setTab('edit');
   }
@@ -53,7 +79,6 @@ export default function App() {
 
   return (
     <div className="min-h-screen">
-      <Analytics />
       <header className="sticky top-0 z-10 border-b border-slate-200 bg-white/90 backdrop-blur">
         <div className="flex w-full items-center justify-between px-6 py-3">
           <div>
