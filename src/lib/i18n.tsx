@@ -21,7 +21,7 @@ const dict = {
   'save.saved': { en: 'Saved locally', de: 'Lokal gespeichert' },
   'save.saving': { en: 'Saving…', de: 'Wird gespeichert…' },
   'save.savedTick': { en: '✓ Saved locally', de: '✓ Lokal gespeichert' },
-  'save.quota': { en: '⚠ Draft too large to save', de: '⚠ Entwurf zu groß zum Speichern' },
+  'save.quota': { en: '⚠ Device storage full — draft not saved', de: '⚠ Speicherplatz voll — Entwurf nicht gespeichert' },
   'save.error': { en: '⚠ Couldn’t save', de: '⚠ Speichern fehlgeschlagen' },
   'save.tooltip': {
     en: 'Your draft is stored only in this browser — it never leaves your device.',
