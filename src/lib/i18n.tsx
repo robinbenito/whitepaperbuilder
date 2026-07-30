@@ -15,6 +15,14 @@ const dict = {
   'preview.live': { en: 'Live preview', de: 'Live-Vorschau' },
   'download.pdf': { en: '⬇ Download PDF', de: '⬇ PDF herunterladen' },
   'download.generating': { en: 'Generating…', de: 'Wird erstellt…' },
+  'pdf.failed': {
+    en: 'The PDF could not be generated. Please try again — if it keeps failing, check the most recently added image or entry.',
+    de: 'Das PDF konnte nicht erstellt werden. Bitte versuche es erneut — falls es weiter fehlschlägt, prüfe das zuletzt hinzugefügte Bild bzw. den letzten Eintrag.',
+  },
+  'pdf.missingImages': {
+    en: '{n} image(s) could not be embedded and are missing from the PDF (the image source could not be loaded).',
+    de: '{n} Bild(er) konnten nicht eingebettet werden und fehlen im PDF (die Bildquelle konnte nicht geladen werden).',
+  },
   'lang.label': { en: 'Language', de: 'Sprache' },
 
   // Autosave / restore

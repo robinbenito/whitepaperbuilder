@@ -94,15 +94,6 @@ const s = StyleSheet.create({
   chatgptBadge: { fontSize: 9, color: '#047857' },
   refItem: { fontSize: 9.5, marginBottom: 4 },
   refLink: { color: '#1d4ed8' },
-  footer: {
-    position: 'absolute',
-    bottom: 28,
-    left: 64,
-    right: 64,
-    textAlign: 'center',
-    fontSize: 9,
-    color: '#94a3b8',
-  },
 });
 
 /** Render a single line of inline markdown (bold + inline code) into Text spans. */
@@ -196,8 +187,13 @@ export default function PdfDocument({
               <View style={s.contextImgs}>
                 {e.contextImages.map((c) =>
                   c.imageUrl ? (
-                    // eslint-disable-next-line jsx-a11y/alt-text
-                    <Image key={c.id} src={c.imageUrl} style={s.contextImg} />
+                    // wrap={false}: an <Image> split across a page break trips a
+                    // react-pdf layout bug ("unsupported number: …") that aborts
+                    // the whole export, so images must never straddle pages.
+                    <View key={c.id} wrap={false}>
+                      {/* eslint-disable-next-line jsx-a11y/alt-text */}
+                      <Image src={c.imageUrl} style={s.contextImg} />
+                    </View>
                   ) : null,
                 )}
               </View>
@@ -232,10 +228,16 @@ export default function PdfDocument({
           </View>
         </View>
 
-        {/* Result image, captioned by its figure number. */}
-        {/* eslint-disable-next-line jsx-a11y/alt-text */}
-        {e.imageUrl ? <Image src={e.imageUrl} style={s.figImage} /> : null}
-        <Text style={s.figNumber}>{t('doc.figure')} {i + 1}.</Text>
+        {/* Result image, captioned by its figure number. Kept in an unbreakable
+            block: an <Image> with maxHeight straddling a page break trips a
+            react-pdf layout bug ("unsupported number: …") that aborts the whole
+            export, so the image (plus its caption) always moves to the next
+            page as one unit instead of splitting. */}
+        <View wrap={false}>
+          {/* eslint-disable-next-line jsx-a11y/alt-text */}
+          {e.imageUrl ? <Image src={e.imageUrl} style={s.figImage} /> : null}
+          <Text style={s.figNumber}>{t('doc.figure')} {i + 1}.</Text>
+        </View>
 
         {e.notes.trim() ? (
           <Text style={s.figNotes}>
@@ -293,11 +295,11 @@ export default function PdfDocument({
           </View>
         )}
 
-        <Text
-          style={s.footer}
-          render={({ pageNumber, totalPages }) => `${pageNumber} / ${totalPages}`}
-          fixed
-        />
+        {/* No page-number footer here on purpose: a `fixed` element with a
+            `render` prop forces react-pdf to relayout every page, which trips
+            a layout bug ("unsupported number: …") on multi-page documents
+            with images and kills the whole export. Page numbers are stamped
+            onto the finished PDF afterwards (see lib/pageNumbers.ts). */}
       </Page>
     </Document>
   );

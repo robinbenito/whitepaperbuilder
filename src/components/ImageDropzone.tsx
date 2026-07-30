@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { readFileAsDataUrl, firstImageFile } from '../lib/image';
+import { toEmbeddableImage } from '../lib/pdfImages';
 
 interface Props {
   imageUrl?: string;
@@ -31,7 +32,11 @@ export default function ImageDropzone({
   async function accept(file: File | null) {
     if (!file) return;
     const dataUrl = await readFileAsDataUrl(file);
-    onImage(dataUrl, file.name || 'pasted-image.png');
+    // Store PNG/JPEG only: other formats (WebP/AVIF/HEIC…) can't be embedded
+    // in the exported PDF. Fall back to the raw data if conversion fails so
+    // the on-screen preview still works.
+    const embeddable = await toEmbeddableImage(dataUrl);
+    onImage(embeddable ?? dataUrl, file.name || 'pasted-image.png');
   }
 
   return (
