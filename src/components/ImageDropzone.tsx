@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { readFileAsDataUrl, firstImageFile } from '../lib/image';
-import { toEmbeddableImage } from '../lib/pdfImages';
+import { toEmbeddableImage, FIGURE_MAX_PX, type PixelBox } from '../lib/pdfImages';
 
 interface Props {
   imageUrl?: string;
@@ -11,6 +11,8 @@ interface Props {
   /** Tailwind classes controlling the box size (default: square thumbnail). */
   className?: string;
   alt?: string;
+  /** 150 ppi pixel budget the accepted image is downscaled to. */
+  maxPixels?: PixelBox;
 }
 
 /**
@@ -25,6 +27,7 @@ export default function ImageDropzone({
   placeholder = 'Click, drop, or paste',
   className = 'aspect-square w-full',
   alt = 'image',
+  maxPixels = FIGURE_MAX_PX,
 }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
@@ -32,10 +35,11 @@ export default function ImageDropzone({
   async function accept(file: File | null) {
     if (!file) return;
     const dataUrl = await readFileAsDataUrl(file);
-    // Store PNG/JPEG only: other formats (WebP/AVIF/HEIC…) can't be embedded
-    // in the exported PDF. Fall back to the raw data if conversion fails so
-    // the on-screen preview still works.
-    const embeddable = await toEmbeddableImage(dataUrl);
+    // Store PNG/JPEG only, downscaled to the 150 ppi budget: other formats
+    // (WebP/AVIF/HEIC…) can't be embedded in the exported PDF, and larger
+    // pixels than the PDF can show only bloat the draft. Fall back to the raw
+    // data if conversion fails so the on-screen preview still works.
+    const embeddable = await toEmbeddableImage(dataUrl, maxPixels);
     onImage(embeddable ?? dataUrl, file.name || 'pasted-image.png');
   }
 

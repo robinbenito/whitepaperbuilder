@@ -1,16 +1,34 @@
 // react-pdf can only embed PNG and JPEG bitmaps. Drafts, however, can contain
 // WebP/AVIF data URLs (the formats AI image tools serve) and remote image URLs
-// (from imports and pasted HTML). Those images previously vanished from the
-// exported PDF without a word. Before rendering, every image is converted to a
-// PNG/JPEG data URL via canvas; images that cannot be decoded or fetched are
-// dropped, and the caller is told how many so it can warn the user.
+// (from imports and pasted HTML). On top of the format constraint, source
+// images (phone photos, AI outputs) are typically far larger than they can
+// ever render in the document, bloating drafts and exported PDFs. Images are
+// therefore normalized: decoded, downscaled to their 150 ppi pixel budget,
+// and re-encoded as JPEG (PNG when transparent). Images that cannot be
+// decoded or fetched are dropped at export, and the caller is told how many.
 
 import type { Submission } from '../types';
 
 const EMBEDDABLE = /^data:image\/(png|jpe?g)[;,]/i;
 
-/** Longest edge for converted images — comfortably above A4 print resolution. */
-const MAX_EDGE = 3000;
+// Pixel budgets: 150 ppi over the largest box each image can occupy in the
+// PDF (see PdfDocument styles — A4 content width 595 − 2×64 = 467pt; figure
+// box 467×300pt; context-image column ≈151×130pt; px = pt/72 × ppi). Revisit
+// these if the PDF layout changes.
+const PPI = 150;
+const px = (pt: number) => Math.round((pt / 72) * PPI);
+
+export interface PixelBox {
+  width: number;
+  height: number;
+}
+
+/** Budget for an entry's main figure image (973×625). */
+export const FIGURE_MAX_PX: PixelBox = { width: px(467), height: px(300) };
+/** Budget for the small context/input thumbnails (315×271). */
+export const CONTEXT_MAX_PX: PixelBox = { width: px(151), height: px(130) };
+
+const JPEG_QUALITY = 0.9;
 
 function loadImage(url: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
@@ -34,30 +52,40 @@ function hasTransparency(ctx: CanvasRenderingContext2D, w: number, h: number): b
 }
 
 /**
- * Returns the image as a PNG/JPEG data URL react-pdf can embed, converting it
- * if necessary, or null when the image can't be decoded (unknown format,
- * unreachable/CORS-blocked URL). Already-embeddable images pass through
- * byte-identical.
+ * Returns the image as a PNG/JPEG data URL react-pdf can embed, downscaled to
+ * the given pixel budget. Images already in the right format and within
+ * budget pass through byte-identical. Returns null when the image can't be
+ * decoded at all (unknown format, unreachable/CORS-blocked URL).
  */
-export async function toEmbeddableImage(url: string): Promise<string | null> {
+export async function toEmbeddableImage(
+  url: string,
+  box: PixelBox = FIGURE_MAX_PX,
+): Promise<string | null> {
   if (!url) return null;
-  if (EMBEDDABLE.test(url)) return url;
+  const embeddableFormat = EMBEDDABLE.test(url);
   try {
     const img = await loadImage(url);
-    const scale = Math.min(1, MAX_EDGE / Math.max(img.naturalWidth, img.naturalHeight, 1));
+    const scale = Math.min(
+      box.width / Math.max(img.naturalWidth, 1),
+      box.height / Math.max(img.naturalHeight, 1),
+      1,
+    );
+    if (embeddableFormat && scale === 1) return url;
     const w = Math.max(1, Math.round(img.naturalWidth * scale));
     const h = Math.max(1, Math.round(img.naturalHeight * scale));
     const canvas = document.createElement('canvas');
     canvas.width = w;
     canvas.height = h;
     const ctx = canvas.getContext('2d');
-    if (!ctx) return null;
+    if (!ctx) return embeddableFormat ? url : null;
     ctx.drawImage(img, 0, 0, w, h);
     return hasTransparency(ctx, w, h)
       ? canvas.toDataURL('image/png')
-      : canvas.toDataURL('image/jpeg', 0.92);
+      : canvas.toDataURL('image/jpeg', JPEG_QUALITY);
   } catch {
-    return null;
+    // Undecodable: keep an already-embeddable original rather than losing it;
+    // anything else can't be salvaged.
+    return embeddableFormat ? url : null;
   }
 }
 
@@ -67,11 +95,12 @@ export interface PdfReadySubmission {
   missingImages: number;
 }
 
-/** Copy of the submission with every image embeddable; undecodable ones removed. */
+/** Copy of the submission with every image embeddable and within its 150 ppi
+ * budget; undecodable ones removed. */
 export async function withEmbeddableImages(submission: Submission): Promise<PdfReadySubmission> {
   let missingImages = 0;
-  const convert = async (url: string): Promise<string> => {
-    const converted = await toEmbeddableImage(url);
+  const convert = async (url: string, box: PixelBox): Promise<string> => {
+    const converted = await toEmbeddableImage(url, box);
     if (url && converted === null) missingImages++;
     return converted ?? '';
   };
@@ -80,10 +109,10 @@ export async function withEmbeddableImages(submission: Submission): Promise<PdfR
   // Entries sequentially (not Promise.all) so a big draft doesn't decode
   // dozens of multi-megabyte images at once.
   for (const e of submission.entries) {
-    const imageUrl = await convert(e.imageUrl);
+    const imageUrl = await convert(e.imageUrl, FIGURE_MAX_PX);
     const contextImages = [];
     for (const c of e.contextImages) {
-      contextImages.push({ ...c, imageUrl: await convert(c.imageUrl) });
+      contextImages.push({ ...c, imageUrl: await convert(c.imageUrl, CONTEXT_MAX_PX) });
     }
     entries.push({ ...e, imageUrl, contextImages });
   }
