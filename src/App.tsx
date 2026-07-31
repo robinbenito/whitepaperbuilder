@@ -5,6 +5,8 @@ import type { Submission } from './types';
 import { emptySubmission } from './types';
 import { useI18n, type Translate } from './lib/i18n';
 import { loadSubmission, clearSubmission } from './lib/persistence';
+import { withEmbeddableImages } from './lib/pdfImages';
+import { addPageNumbers } from './lib/pageNumbers';
 import { useAutosave, type SaveStatus } from './lib/useAutosave';
 import SubmissionForm from './components/SubmissionForm';
 import WhitePaper from './components/WhitePaper';
@@ -62,7 +64,17 @@ function Editor({ initialDraft }: { initialDraft: Submission | null }) {
   async function downloadPdf() {
     setGenerating(true);
     try {
-      const blob = await pdf(<PdfDocument submission={submission} lang={lang} />).toBlob();
+      // Convert images react-pdf can't embed (WebP/AVIF data URLs, remote
+      // URLs) to PNG/JPEG first; without this they silently vanish from the
+      // PDF — or, for undecodable ones, sink the whole export.
+      const { submission: printable, missingImages } = await withEmbeddableImages(submission);
+      let blob = await pdf(<PdfDocument submission={printable} lang={lang} />).toBlob();
+      try {
+        blob = await addPageNumbers(blob);
+      } catch (e) {
+        // A PDF without page numbers still beats no PDF at all.
+        console.error('Stamping page numbers failed', e);
+      }
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       const slug =
@@ -70,8 +82,19 @@ function Editor({ initialDraft }: { initialDraft: Submission | null }) {
         'white-paper';
       a.href = url;
       a.download = `${slug}.pdf`;
+      // Attach the anchor and defer the revoke: Safari can cancel the download
+      // if the blob URL is revoked before the save actually starts.
+      document.body.appendChild(a);
       a.click();
-      URL.revokeObjectURL(url);
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 10_000);
+      if (missingImages > 0) {
+        alert(t('pdf.missingImages').replace('{n}', String(missingImages)));
+      }
+    } catch (e) {
+      // Surface the failure — a silent no-op download button is undebuggable.
+      console.error('PDF export failed', e);
+      alert(t('pdf.failed'));
     } finally {
       setGenerating(false);
     }

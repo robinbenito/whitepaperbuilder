@@ -1,6 +1,7 @@
 import type { ImageEntry, ContextImage } from '../types';
 import HighlightedPrompt from './HighlightedPrompt';
 import ImageDropzone from './ImageDropzone';
+import { CONTEXT_MAX_PX } from '../lib/pdfImages';
 import { markDifferences, clearMarks } from '../lib/promptDiff';
 import { useI18n } from '../lib/i18n';
 
@@ -177,6 +178,7 @@ export default function ImageEntryEditor({
                     onClear={() => removeContextImage(c.id)}
                     className="h-16 w-16"
                     alt={t('entry.contextImages')}
+                    maxPixels={CONTEXT_MAX_PX}
                   />
                 </div>
               ))}
@@ -186,6 +188,7 @@ export default function ImageEntryEditor({
                   placeholder={t('entry.addContext')}
                   className="h-16 w-16"
                   alt={t('entry.addContext')}
+                  maxPixels={CONTEXT_MAX_PX}
                 />
               </div>
             </div>
